@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
@@ -67,6 +67,11 @@ export default function PomodoroTimer() {
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [showNotification, setShowNotification] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    audioRef.current = new Audio('/notification.mp3')
+  }, [])
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null
@@ -79,6 +84,12 @@ export default function PomodoroTimer() {
         )
       }, 1000)
     } else if (timeLeft === 0) {
+      if (audioRef.current) {
+        audioRef.current.play().catch(error => {
+          console.log('Audio playback failed:', error)
+        })
+      }
+      
       setIsWorking((prev) => !prev)
       setTimeLeft(isWorking ? breakDuration * 60 : workDuration * 60)
       setProgress(100)
@@ -285,7 +296,7 @@ export default function PomodoroTimer() {
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 text-gray-800 dark:text-white px-4 py-2 rounded-full shadow-lg transition-all duration-300 ease-in-out animate-fade-in-up">
           <div className="flex items-center">
             <Bell className="mr-2 h-4 w-4" />
-            <span className="font-medium">{isWorking ? 'Break time!' : 'Time to work!'}</span>
+            <span className="font-medium">{!isWorking ? 'Break time!' : 'Time to work!'}</span>
           </div>
         </div>
       )}
